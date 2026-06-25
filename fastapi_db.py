@@ -1,11 +1,12 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey,Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy import DateTime
 from datetime import datetime
-# База данных для сервера
-SQLALCHEMY_DATABASE_URL = "sqlite:///./gym_tracker.db"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# База данных для сервера
+SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_u3rPdKtqxZB1@ep-damp-flower-ass3mr26.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -70,6 +71,17 @@ class HistoryExercise(Base):
     max_weight = Column(Float, default=0.0)
     best_reps = Column(Integer, default=0)
     volume = Column(Float, default=0.0)
+
+class HistorySet(Base):
+    __tablename__ = "history_sets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    weight = Column(Float)
+    reps = Column(Integer)
+    is_done = Column(Boolean, default=True)
+
+    # Привязываем этот подход к конкретному выполненному упражнению в истории
+    exercise_id = Column(Integer, ForeignKey("history_exercises.id"))
 
 # Создаем таблицы в БД
 Base.metadata.create_all(bind=engine)

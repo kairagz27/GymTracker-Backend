@@ -6,8 +6,9 @@ from typing import List
 from sqlalchemy import func
 from datetime import timedelta, datetime
 
+
 # Импортируем твои обновленные модели
-from fastapi_db import get_db, User, Program, WorkoutDay, Exercise, ExerciseSet
+from fastapi_db import get_db, User, Program, WorkoutDay, Exercise, ExerciseSet,HistorySet
 from fastapi_db import WorkoutHistory, HistoryExercise
 
 # --- СХЕМЫ PYDANTIC ---
@@ -377,3 +378,39 @@ def get_history(telegram_id: int, db: Session = Depends(get_db)):
         ))
 
     return history_list
+
+
+@app.get("/export_history/{telegram_id}")
+def export_history(telegram_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return {"error": "User not found"}
+
+    # Достаем всю историю
+    history_records = db.query(WorkoutHistory).filter(
+        WorkoutHistory.user_id == user.id
+    ).order_by(WorkoutHistory.date.desc()).all()
+
+    export_data = []
+    for hr in history_records:
+        exercises = db.query(HistoryExercise).filter(HistoryExercise.history_id == hr.id).all()
+        ex_data = []
+        for ex in exercises:
+            sets = db.query(HistorySet).filter(HistorySet.exercise_id == ex.id).all()
+            sets_data = [{"weight": s.weight, "reps": s.reps, "is_done": s.is_done} for s in sets]
+            ex_data.append({"name": ex.exercise_name, "sets": sets_data})
+
+        export_data.append({
+            "date": hr.date.strftime("%Y-%m-%d"),
+            "day_name": hr.day_name,
+            "total_volume": hr.total_volume,
+            "total_sets": hr.total_sets,
+            "exercises": ex_data
+        })
+
+    return {
+        "telegram_id": telegram_id,
+        "export_date": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "total_workouts": len(export_data),
+        "workouts": export_data
+    }
