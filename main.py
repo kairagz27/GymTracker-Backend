@@ -414,3 +414,18 @@ def export_history(telegram_id: int, db: Session = Depends(get_db)):
         "total_workouts": len(export_data),
         "workouts": export_data
     }
+
+@app.delete("/delete_program/{telegram_id}/{program_name}")
+def delete_program(telegram_id: int, program_name: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        return {"error": "User not found"}
+
+    # Ищем программу по имени и ID юзера
+    prog = db.query(Program).filter(Program.user_id == user.id, Program.name == program_name).first()
+    if prog:
+        db.delete(prog) # Удаляем из базы
+        db.commit()     # Сохраняем изменения
+        return {"status": "deleted"}
+
+    return {"error": "Program not found"}
