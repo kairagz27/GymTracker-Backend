@@ -1,0 +1,21 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# IDE and OS files
+.idea/
+*.iml
+.DS_Store

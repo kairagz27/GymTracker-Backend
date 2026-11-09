@@ -1,10 +1,16 @@
+import os
+from dotenv import load_dotenv
+
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey,Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy import DateTime
 from datetime import datetime
 
 # База данных для сервера
-SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_u3rPdKtqxZB1@ep-damp-flower-ass3mr26.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+load_dotenv()
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+if not SQLALCHEMY_DATABASE_URL:
+    raise ValueError("Set DATABASE_URL in the environment or a local .env file.")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
